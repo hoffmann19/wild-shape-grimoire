@@ -17,6 +17,7 @@ let state = {
     search: '',
     size: 'all',
     cr: 'all',
+    sortBy: 'default',
     speeds: [] // can contain 'climb', 'swim', 'fly', 'burrow'
   },
   activeWildShape: {
@@ -61,6 +62,7 @@ const elements = {
   viewTable: document.getElementById('view-table'),
   filterSize: document.getElementById('filter-size'),
   filterCr: document.getElementById('filter-cr'),
+  filterSort: document.getElementById('filter-sort'),
   speedClimb: document.getElementById('speed-climb'),
   speedSwim: document.getElementById('speed-swim'),
   speedFly: document.getElementById('speed-fly'),
@@ -341,6 +343,12 @@ function setupEventListeners() {
     renderBeasts();
   });
 
+  // Filter Sort By
+  elements.filterSort.addEventListener('change', (e) => {
+    state.filters.sortBy = e.target.value;
+    renderBeasts();
+  });
+
   // Speed Filters
   const speedPills = [elements.speedClimb, elements.speedSwim, elements.speedFly, elements.speedBurrow];
   speedPills.forEach(pill => {
@@ -571,13 +579,38 @@ function renderBeasts() {
     return true;
   });
 
-  // Sort: Favorites first, then CR ascending, then Name alphabetically
+  // Sort list
+  const sortBy = state.filters.sortBy || 'default';
   filtered.sort((a, b) => {
-    const aFav = state.favorites.includes(a.id) ? 1 : 0;
-    const bFav = state.favorites.includes(b.id) ? 1 : 0;
-    if (aFav !== bFav) return bFav - aFav;
-    if (a.cr !== b.cr) return a.cr - b.cr;
-    return a.name.localeCompare(b.name);
+    if (sortBy === 'default') {
+      const aFav = state.favorites.includes(a.id) ? 1 : 0;
+      const bFav = state.favorites.includes(b.id) ? 1 : 0;
+      if (aFav !== bFav) return bFav - aFav;
+      if (a.cr !== b.cr) return a.cr - b.cr;
+      return a.name.localeCompare(b.name);
+    }
+    if (sortBy === 'name-asc') {
+      return a.name.localeCompare(b.name);
+    }
+    if (sortBy === 'cr-desc') {
+      return b.cr - a.cr;
+    }
+    if (sortBy === 'cr-asc') {
+      return a.cr - b.cr;
+    }
+    if (sortBy === 'ac-desc') {
+      return calculateBeastAC(b) - calculateBeastAC(a);
+    }
+    if (sortBy === 'ac-asc') {
+      return calculateBeastAC(a) - calculateBeastAC(b);
+    }
+    if (sortBy === 'hp-desc') {
+      return b.hp - a.hp;
+    }
+    if (sortBy === 'hp-asc') {
+      return a.hp - b.hp;
+    }
+    return 0;
   });
 
   // Update counts
