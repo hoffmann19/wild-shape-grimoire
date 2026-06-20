@@ -622,6 +622,25 @@ function renderGrid(beastList) {
     if (beast.speeds.fly > 0) speedHtml += `<span class="speed-badge fly">Fly ${beast.speeds.fly} ft</span>`;
     if (beast.speeds.burrow > 0) speedHtml += `<span class="speed-badge burrow">Burrow ${beast.speeds.burrow} ft</span>`;
 
+    // Build traits & actions HTML
+    let traitsHtml = '';
+    const abList = [];
+    if (beast.traits) {
+      beast.traits.forEach(t => abList.push({ name: t.name, type: 'trait' }));
+    }
+    if (beast.actions) {
+      beast.actions.forEach(a => abList.push({ name: a.name, type: 'action' }));
+    }
+
+    if (abList.length > 0) {
+      traitsHtml = '<div class="card-traits">';
+      abList.forEach(item => {
+        const badgeClass = item.type === 'action' ? 'action-badge' : '';
+        traitsHtml += `<span class="trait-badge ${badgeClass}">${item.name}</span>`;
+      });
+      traitsHtml += '</div>';
+    }
+
     // CR display helper
     let crStr = beast.cr === 0.125 ? '1/8' : beast.cr === 0.25 ? '1/4' : beast.cr === 0.5 ? '1/2' : beast.cr;
 
@@ -654,6 +673,8 @@ function renderGrid(beastList) {
       <div class="card-speeds">
         ${speedHtml}
       </div>
+
+      ${traitsHtml}
 
       <div class="card-notes">
         ${beast.senses || 'Normal senses'}
@@ -702,6 +723,25 @@ function renderTable(beastList) {
     if (beast.speeds.fly > 0) speedHtml += `<span class="speed-badge fly">Fly ${beast.speeds.fly} ft</span>`;
     if (beast.speeds.burrow > 0) speedHtml += `<span class="speed-badge burrow">Burrow ${beast.speeds.burrow} ft</span>`;
 
+    // Build traits & actions HTML for table
+    let tableTraitsHtml = '';
+    const abTableList = [];
+    if (beast.traits) {
+      beast.traits.forEach(t => abTableList.push({ name: t.name, type: 'trait' }));
+    }
+    if (beast.actions) {
+      beast.actions.forEach(a => abTableList.push({ name: a.name, type: 'action' }));
+    }
+
+    if (abTableList.length > 0) {
+      tableTraitsHtml = '<div class="card-traits" style="margin-bottom: 0.4rem;">';
+      abTableList.forEach(item => {
+        const badgeClass = item.type === 'action' ? 'action-badge' : '';
+        tableTraitsHtml += `<span class="trait-badge ${badgeClass}">${item.name}</span>`;
+      });
+      tableTraitsHtml += '</div>';
+    }
+
     let crStr = beast.cr === 0.125 ? '1/8' : beast.cr === 0.25 ? '1/4' : beast.cr === 0.5 ? '1/2' : beast.cr;
 
     const row = document.createElement('tr');
@@ -715,7 +755,10 @@ function renderTable(beastList) {
       <td class="table-ac">${activeAc}</td>
       <td class="table-hp">${hpDisplay}</td>
       <td><div class="card-speeds">${speedHtml}</div></td>
-      <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${beast.senses || 'Normal senses'}</td>
+      <td>
+        ${tableTraitsHtml}
+        <span style="font-size: 0.85rem; color: var(--text-muted);">${beast.senses || 'Normal senses'}</span>
+      </td>
     `;
 
     row.addEventListener('click', (e) => {
