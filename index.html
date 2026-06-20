@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wild Shape Grimoire - Interactive Druid Cheat Sheet</title>
+  <meta name="description" content="An interactive D&D 5e / 2024 Druid Wild Shape cheat sheet. Manage stats, filter eligible forms, roll actions, and track active shapes.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- SIDEBAR: Character Configuration Panel -->
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>Grimoire</h1>
+        <p>Wild Shape Tracker</p>
+      </div>
+
+      <div class="config-section">
+        <!-- Rule Edition Toggle -->
+        <div class="config-group">
+          <label>Edition Ruleset
+            <span class="help-tooltip" title="2024: Retain own HP, gain Druid Level in Temp HP (Moon Druid Level x 3). 2014: Assume beast's HP.">ℹ️</span>
+          </label>
+          <div class="toggle-switch-group">
+            <button id="rules-2024" class="toggle-btn active">D&D 2024</button>
+            <button id="rules-2014" class="toggle-btn">D&D 2014</button>
+          </div>
+        </div>
+
+        <!-- Subclass Selector -->
+        <div class="config-group">
+          <label>Druid Subclass</label>
+          <select id="char-subclass" class="input-styled">
+            <option value="base">Base Druid (Land, Stars, etc.)</option>
+            <option value="moon">Circle of the Moon</option>
+          </select>
+        </div>
+
+        <!-- Druid Level -->
+        <div class="config-group">
+          <label>Druid Level</label>
+          <input type="number" id="char-level" class="input-styled" min="2" max="20" value="2">
+        </div>
+
+        <!-- Wisdom Modifier (2024 Moon AC calculation) -->
+        <div id="wis-modifier-group" class="config-group" style="display: none;">
+          <label>Wisdom Modifier
+            <span class="help-tooltip" title="2024 Moon Druid AC becomes 13 + Wisdom mod if higher than beast AC.">ℹ️</span>
+          </label>
+          <input type="number" id="char-wis" class="input-styled" min="-5" max="10" value="3">
+        </div>
+
+        <!-- Core Hit Points -->
+        <div class="config-group">
+          <label>Core Hit Points
+            <span class="help-tooltip" title="Your normal humanoid form's hit points. Retained in 2024 rules.">ℹ️</span>
+          </label>
+          <div class="hp-tracker">
+            <input type="number" id="char-hp-current" class="input-styled" min="0" value="13" placeholder="Cur">
+            <span>/</span>
+            <input type="number" id="char-hp-max" class="input-styled" min="1" value="13" placeholder="Max">
+          </div>
+        </div>
+      </div>
+
+      <!-- Character Summary Panel -->
+      <div class="char-summary">
+        <h3>Form Constraints</h3>
+        <div class="summary-row">
+          <span class="label">Max CR Allowed:</span>
+          <span id="limit-cr" class="val">CR 1/4</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Swim Shapes:</span>
+          <span id="limit-swim" class="val" style="color: var(--color-danger);">Locked (Lv 4)</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Fly Shapes:</span>
+          <span id="limit-fly" class="val" style="color: var(--color-danger);">Locked (Lv 8)</span>
+        </div>
+        <div class="summary-row" id="limit-temphp-row">
+          <span class="label">Wild Shape Temp HP:</span>
+          <span id="limit-temphp" class="val" style="color: #3498db;">+2 HP</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN WINDOW -->
+    <main class="main-content">
+      <!-- HEADER ACTIONS: Tabs & Custom Beast Button -->
+      <div class="header-actions">
+        <nav class="tabs">
+          <button id="tab-all" class="tab-btn active">All Beasts</button>
+          <button id="tab-eligible" class="tab-btn">Eligible</button>
+          <button id="tab-favs" class="tab-btn">⭐ Favorites</button>
+          <button id="tab-custom" class="tab-btn">Custom Forms</button>
+        </nav>
+        <div class="action-buttons">
+          <button id="btn-create-custom" class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Add Custom Form
+          </button>
+        </div>
+      </div>
+
+      <!-- FILTER PANEL -->
+      <div class="filter-board">
+        <div class="search-filter-row">
+          <div class="search-box">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <input type="text" id="filter-search" class="input-styled" placeholder="Search by name, action, traits (e.g. Pack Tactics, Climb)...">
+          </div>
+          <div class="view-toggle">
+            <button id="view-grid" class="view-btn active" title="Grid View">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            </button>
+            <button id="view-table" class="view-btn" title="Table View">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="filters-grid">
+          <!-- Size Filter -->
+          <div class="config-group">
+            <label>Size</label>
+            <select id="filter-size" class="input-styled">
+              <option value="all">All Sizes</option>
+              <option value="Tiny">Tiny</option>
+              <option value="Small">Small</option>
+              <option value="Medium">Medium</option>
+              <option value="Large">Large</option>
+              <option value="Huge">Huge</option>
+            </select>
+          </div>
+
+          <!-- Max CR Filter -->
+          <div class="config-group">
+            <label>Max Challenge Rating (CR)</label>
+            <select id="filter-cr" class="input-styled">
+              <option value="all">Any CR</option>
+              <option value="0">CR 0</option>
+              <option value="0.125">CR 1/8</option>
+              <option value="0.25">CR 1/4</option>
+              <option value="0.5">CR 1/2</option>
+              <option value="1">CR 1</option>
+              <option value="2">CR 2</option>
+              <option value="3">CR 3 or Higher</option>
+            </select>
+          </div>
+
+          <!-- Speed Type Filters -->
+          <div class="config-group" style="grid-column: span 2;">
+            <label>Movement Speeds</label>
+            <div class="filter-toggle-buttons">
+              <span id="speed-climb" class="filter-pill" data-speed="climb">Climbing</span>
+              <span id="speed-swim" class="filter-pill" data-speed="swim">Swimming</span>
+              <span id="speed-fly" class="filter-pill" data-speed="fly">Flying</span>
+              <span id="speed-burrow" class="filter-pill" data-speed="burrow">Burrowing</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS COUNT -->
+      <div class="results-header">
+        <span id="results-count">Showing 0 beasts</span>
+        <span id="results-rule-indicator">D&D 2024 Rules Active</span>
+      </div>
+
+      <!-- BEAST GRID VIEW -->
+      <div id="beasts-grid-container" class="beast-grid">
+        <!-- Rendered dynamically by JS -->
+      </div>
+
+      <!-- BEAST TABLE VIEW -->
+      <div id="beasts-table-container" class="beast-table-wrapper" style="display: none;">
+        <table class="beast-table">
+          <thead>
+            <tr>
+              <th width="40">⭐</th>
+              <th>Name</th>
+              <th>AC</th>
+              <th>Hit Points</th>
+              <th>Speeds</th>
+              <th>Notes / Senses</th>
+            </tr>
+          </thead>
+          <tbody id="beasts-table-body">
+            <!-- Rendered dynamically by JS -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- BEAST DETAIL DRAWER -->
+  <div id="detail-drawer-overlay" class="drawer-overlay"></div>
+  <div id="detail-drawer" class="drawer">
+    <div class="drawer-header">
+      <div class="drawer-header-title">
+        <h2 id="detail-name">Giant Wolf Spider</h2>
+        <span id="detail-meta" class="table-sub">Medium Beast, CR 1/4</span>
+      </div>
+      <button id="detail-close" class="drawer-close">✕</button>
+    </div>
+    
+    <div class="drawer-body">
+      <!-- Core Stats Grid -->
+      <div class="detail-section">
+        <div class="card-stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="stat-item">
+            <span class="label">Armor Class</span>
+            <span id="detail-ac" class="val">13</span>
+          </div>
+          <div class="stat-item">
+            <span class="label">Hit Points</span>
+            <span id="detail-hp" class="val stat-hp">11</span>
+          </div>
+          <div class="stat-item">
+            <span class="label">Speed</span>
+            <span id="detail-speed" class="val" style="font-size: 0.9rem;">40 ft</span>
+          </div>
+          <div class="stat-item">
+            <span class="label">CR</span>
+            <span id="detail-cr" class="val">1/4</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ability Scores -->
+      <div class="detail-section">
+        <h4>Ability Scores</h4>
+        <div class="ability-grid">
+          <div class="ability-box">
+            <div class="label">STR</div>
+            <div id="score-str" class="score">12</div>
+            <div id="mod-str" class="mod">+1</div>
+          </div>
+          <div class="ability-box">
+            <div class="label">DEX</div>
+            <div id="score-dex" class="score">16</div>
+            <div id="mod-dex" class="mod">+3</div>
+          </div>
+          <div class="ability-box">
+            <div class="label">CON</div>
+            <div id="score-con" class="score">13</div>
+            <div id="mod-con" class="mod">+1</div>
+          </div>
+          <div class="ability-box">
+            <div class="label">INT</div>
+            <div id="score-int" class="score">3</div>
+            <div id="mod-int" class="mod">-4</div>
+          </div>
+          <div class="ability-box">
+            <div class="label">WIS</div>
+            <div id="score-wis" class="score">12</div>
+            <div id="mod-wis" class="mod">+1</div>
+          </div>
+          <div class="ability-box">
+            <div class="label">CHA</div>
+            <div id="score-cha" class="score">4</div>
+            <div id="mod-cha" class="mod">-3</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details List -->
+      <div class="detail-section">
+        <h4>Senses & Skills</h4>
+        <ul class="detail-stat-list">
+          <li><strong>Senses:</strong> <span id="detail-senses">Darkvision 60ft, Passive Perception 13</span></li>
+          <li><strong>Skills:</strong> <span id="detail-skills">Stealth +7</span></li>
+        </ul>
+      </div>
+
+      <!-- Special Traits -->
+      <div class="detail-section">
+        <h4>Traits</h4>
+        <div id="detail-traits" class="traits-list">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Actions with Rollers -->
+      <div class="detail-section">
+        <h4>Actions (Click to Roll)</h4>
+        <div id="detail-actions" class="actions-list">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button id="btn-activate-wildshape" class="btn-wildshape">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2z"></path><path d="M12 6v12"></path><path d="M8 10h8"></path></svg>
+        Wild Shape
+      </button>
+      <button id="btn-delete-beast" class="btn-delete-beast" title="Delete Custom Beast" style="display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- FLOATING ACTIVE WILD SHAPE HUD -->
+  <div id="active-wildshape-hud" class="wildshape-hud">
+    <div class="hud-header">
+      <h4>Active Wild Shape</h4>
+      <div class="badge-pulse"></div>
+    </div>
+    <div>
+      <div id="hud-beast-name" class="hud-beast-name">Wolf</div>
+      <div id="hud-beast-sub" class="hud-beast-sub">Medium Beast</div>
+    </div>
+    
+    <div class="hud-hp-tracker">
+      <div class="hud-hp-info">
+        <span id="hud-hp-label">Temporary HP:</span>
+        <strong><span id="hud-hp-current">2</span> / <span id="hud-hp-max">2</span> HP</strong>
+      </div>
+      <div class="hud-hp-bar-container">
+        <div id="hud-hp-bar" class="hud-hp-bar temp-hp-bar"></div>
+      </div>
+    </div>
+
+    <div class="summary-row" style="font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.4rem;">
+      <span class="label">Armor Class:</span>
+      <strong id="hud-ac" class="val" style="color: var(--text-gold);">13</strong>
+    </div>
+    <div class="summary-row" style="font-size: 0.85rem; margin-bottom: 0.4rem;">
+      <span class="label">Speeds:</span>
+      <strong id="hud-speeds" class="val">40 ft</strong>
+    </div>
+
+    <div class="hud-controls-row">
+      <button id="hud-btn-dmg-1" class="btn-hud-hp dmg" data-amount="-1">-1 dmg</button>
+      <button id="hud-btn-dmg-5" class="btn-hud-hp dmg" data-amount="-5">-5 dmg</button>
+      <button id="hud-btn-heal-1" class="btn-hud-hp heal" data-amount="1">+1 THP</button>
+    </div>
+
+    <button id="btn-revert-shape" class="btn-revert">Revert Form</button>
+  </div>
+
+  <!-- DICE ROLLER TOAST NOTIFICATION CONTAINER -->
+  <div id="roll-notifications" class="roll-notification-panel"></div>
+
+  <!-- MODAL: Custom Beast Creator -->
+  <div id="custom-beast-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Create Custom Beast Form</h3>
+        <button id="btn-modal-close" class="drawer-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Identity Row -->
+        <div class="modal-row">
+          <div class="config-group">
+            <label>Beast Name*</label>
+            <input type="text" id="custom-name" class="input-styled" placeholder="e.g. Giant Crab" required>
+          </div>
+          <div class="config-group">
+            <label>Size*</label>
+            <select id="custom-size" class="input-styled">
+              <option value="Tiny">Tiny</option>
+              <option value="Small">Small</option>
+              <option value="Medium">Medium</option>
+              <option value="Large" selected>Large</option>
+              <option value="Huge">Huge</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- AC, HP, CR Row -->
+        <div class="modal-row-triple">
+          <div class="config-group">
+            <label>Natural AC*</label>
+            <input type="number" id="custom-ac" class="input-styled" min="1" value="12">
+          </div>
+          <div class="config-group">
+            <label>Beast HP*</label>
+            <input type="number" id="custom-hp" class="input-styled" min="1" value="15">
+          </div>
+          <div class="config-group">
+            <label>Challenge Rating (CR)*</label>
+            <select id="custom-cr" class="input-styled">
+              <option value="0">CR 0</option>
+              <option value="0.125">CR 1/8</option>
+              <option value="0.25" selected>CR 1/4</option>
+              <option value="0.5">CR 1/2</option>
+              <option value="1">CR 1</option>
+              <option value="2">CR 2</option>
+              <option value="3">CR 3</option>
+              <option value="4">CR 4</option>
+              <option value="5">CR 5</option>
+              <option value="6">CR 6</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Speeds Row -->
+        <div class="modal-section-title">Speeds (ft.)</div>
+        <div class="modal-row-triple">
+          <div class="config-group">
+            <label>Land Speed*</label>
+            <input type="number" id="custom-speed-land" class="input-styled" min="0" value="30">
+          </div>
+          <div class="config-group">
+            <label>Climb Speed</label>
+            <input type="number" id="custom-speed-climb" class="input-styled" min="0" value="0">
+          </div>
+          <div class="config-group">
+            <label>Swim Speed</label>
+            <input type="number" id="custom-speed-swim" class="input-styled" min="0" value="0">
+          </div>
+        </div>
+        <div class="modal-row">
+          <div class="config-group">
+            <label>Fly Speed</label>
+            <input type="number" id="custom-speed-fly" class="input-styled" min="0" value="0">
+          </div>
+          <div class="config-group">
+            <label>Burrow Speed</label>
+            <input type="number" id="custom-speed-burrow" class="input-styled" min="0" value="0">
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="modal-section-title">Ability Scores</div>
+        <div class="modal-row-six">
+          <div class="config-group">
+            <label>STR</label>
+            <input type="number" id="custom-str" class="input-styled" min="1" max="30" value="10">
+          </div>
+          <div class="config-group">
+            <label>DEX</label>
+            <input type="number" id="custom-dex" class="input-styled" min="1" max="30" value="10">
+          </div>
+          <div class="config-group">
+            <label>CON</label>
+            <input type="number" id="custom-con" class="input-styled" min="1" max="30" value="10">
+          </div>
+          <div class="config-group">
+            <label>INT</label>
+            <input type="number" id="custom-int" class="input-styled" min="1" max="30" value="2">
+          </div>
+          <div class="config-group">
+            <label>WIS</label>
+            <input type="number" id="custom-wis" class="input-styled" min="1" max="30" value="10">
+          </div>
+          <div class="config-group">
+            <label>CHA</label>
+            <input type="number" id="custom-cha" class="input-styled" min="1" max="30" value="5">
+          </div>
+        </div>
+
+        <!-- Description Details -->
+        <div class="modal-section-title">Senses & Skills</div>
+        <div class="modal-row">
+          <div class="config-group">
+            <label>Senses</label>
+            <input type="text" id="custom-senses" class="input-styled" placeholder="e.g. Passive Perception 10, Darkvision 30ft">
+          </div>
+          <div class="config-group">
+            <label>Skills</label>
+            <input type="text" id="custom-skills" class="input-styled" placeholder="e.g. Stealth +4, Athletics +3">
+          </div>
+        </div>
+
+        <!-- Custom Traits & Actions builders -->
+        <div class="modal-section-title">Actions & Traits</div>
+        <div class="custom-action-creator">
+          <div class="modal-row-triple">
+            <div class="config-group" style="grid-column: span 2;">
+              <label>Action / Trait Name</label>
+              <input type="text" id="action-name" class="input-styled" placeholder="e.g. Pincer Claw">
+            </div>
+            <div class="config-group">
+              <label>Type</label>
+              <select id="action-type" class="input-styled">
+                <option value="attack">Melee Attack</option>
+                <option value="trait">Passive Trait</option>
+              </select>
+            </div>
+          </div>
+          <div id="attack-fields" class="modal-row">
+            <div class="config-group">
+              <label>To-Hit Bonus (e.g. 4)</label>
+              <input type="number" id="action-hit" class="input-styled" value="4">
+            </div>
+            <div class="config-group">
+              <label>Damage Formula (e.g. 1d6+2)</label>
+              <input type="text" id="action-damage" class="input-styled" placeholder="e.g. 1d6+2">
+            </div>
+          </div>
+          <div class="config-group">
+            <label>Description</label>
+            <textarea id="action-desc" class="input-styled" rows="2" placeholder="Detail text for this trait/attack..."></textarea>
+          </div>
+          <button id="btn-add-custom-action" class="btn-primary" style="align-self: flex-end; background: #27ae60; color: white;">Add Action/Trait</button>
+        </div>
+
+        <!-- Added Actions Grid -->
+        <div class="custom-actions-list" id="added-actions-list">
+          <!-- Added items show here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-modal-cancel" class="btn-secondary">Cancel</button>
+        <button id="btn-save-custom-beast" class="btn-primary">Save Beast Form</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading data sets -->
+  <script src="beasts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
