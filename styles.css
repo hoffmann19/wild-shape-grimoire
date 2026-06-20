@@ -1507,22 +1507,25 @@ select.input-styled {
 .main-nav-tabs {
   display: flex;
   gap: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.75rem;
+  background: rgba(18, 28, 23, 0.6);
+  border: 1px solid var(--border-color);
+  padding: 0.35rem;
+  border-radius: 6px;
+  align-self: flex-start;
   margin-bottom: 0.5rem;
 }
 
 .main-tab-btn {
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
   color: var(--text-muted);
   font-family: var(--font-header);
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 600;
   padding: 0.5rem 1.25rem;
   cursor: pointer;
   transition: var(--transition-smooth);
-  border-radius: 6px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1530,14 +1533,12 @@ select.input-styled {
 
 .main-tab-btn:hover {
   color: var(--text-title);
-  background: rgba(255, 255, 255, 0.03);
 }
 
 .main-tab-btn.active {
+  background: rgba(46, 204, 113, 0.15);
   color: var(--color-accent-green);
-  border-color: var(--border-glow);
-  background: rgba(46, 204, 113, 0.08);
-  box-shadow: var(--shadow-glow);
+  border: 1px solid var(--color-accent-green);
   text-shadow: 0 0 5px rgba(46, 204, 113, 0.3);
 }
 
