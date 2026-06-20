@@ -684,19 +684,19 @@ select.input-styled {
 
 .beast-table th {
   background: rgba(10, 15, 13, 0.7);
-  padding: 1rem;
+  padding: 0.4rem 0.6rem;
   font-family: var(--font-header);
   color: var(--text-gold);
   border-bottom: 2px solid var(--border-color);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   letter-spacing: 0.05em;
 }
 
 .beast-table td {
-  padding: 1rem;
+  padding: 0.4rem 0.6rem;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   vertical-align: middle;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   transition: var(--transition-smooth);
 }
 

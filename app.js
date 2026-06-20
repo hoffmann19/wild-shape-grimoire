@@ -647,40 +647,30 @@ function renderGrid(beastList) {
     const card = document.createElement('div');
     card.className = `beast-card ${eligible ? '' : 'locked'}`;
     card.innerHTML = `
-      <div class="card-header">
+      <div class="card-header" style="margin-bottom: 0.15rem;">
         <div class="card-title-group">
-          <h3>${beast.name}</h3>
-          <span class="sub">${beast.size} Beast, CR ${crStr}</span>
+          <h3 style="font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+            ${beast.name}
+            <span class="sub" style="font-size: 0.7rem; font-family: var(--font-header); font-weight: normal; color: var(--text-muted); padding-left: 2px;">CR ${crStr}</span>
+          </h3>
+          <span class="sub" style="font-size: 0.7rem; color: var(--text-muted);">${beast.size}</span>
         </div>
         <button class="fav-star ${isFav ? 'active' : ''}" data-id="${beast.id}">★</button>
       </div>
 
-      <div class="card-stats-grid">
-        <div class="stat-item">
-          <span class="label">AC</span>
-          <span class="val">${activeAc}</span>
-        </div>
-        <div class="stat-item">
-          <span class="label">Hit Points</span>
-          <span class="val stat-hp" style="font-size: ${state.config.ruleset === '2024' ? '0.85rem' : '1rem'}">${hpDisplay}</span>
-        </div>
-        <div class="stat-item">
-          <span class="label">CR</span>
-          <span class="val">${crStr}</span>
-        </div>
+      <div class="card-compact-stats" style="font-size: 0.75rem; display: flex; gap: 0.5rem; color: var(--text-body); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.25rem; margin-bottom: 0.25rem;">
+        <span>AC <strong style="color: var(--color-accent-gold);">${activeAc}</strong></span>
+        <span style="color: var(--text-muted);">|</span>
+        <span>HP <strong style="color: var(--text-gold); font-size: ${state.config.ruleset === '2024' ? '0.75rem' : '0.8rem'}">${hpDisplay}</strong></span>
       </div>
 
-      <div class="card-speeds">
+      <div class="card-speeds" style="gap: 0.25rem;">
         ${speedHtml}
       </div>
 
       ${traitsHtml}
-
-      <div class="card-notes">
-        ${beast.senses || 'Normal senses'}
-      </div>
       
-      ${eligible ? '' : '<div style="position: absolute; bottom: 8px; right: 8px;"><span class="badge-locked">Locked</span></div>'}
+      ${eligible ? '' : '<div style="position: absolute; bottom: 4px; right: 4px;"><span class="badge-locked" style="font-size: 0.6rem; padding: 0.05rem 0.25rem;">Locked</span></div>'}
     `;
 
     // Card click event (ignore if click star)
