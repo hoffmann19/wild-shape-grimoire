@@ -1502,3 +1502,231 @@ select.input-styled {
     width: 100%;
   }
 }
+
+/* SPELL LOOKUP STYLES */
+.main-nav-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.main-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font-header);
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.main-tab-btn:hover {
+  color: var(--text-title);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.main-tab-btn.active {
+  color: var(--color-accent-green);
+  border-color: var(--border-glow);
+  background: rgba(46, 204, 113, 0.08);
+  box-shadow: var(--shadow-glow);
+  text-shadow: 0 0 5px rgba(46, 204, 113, 0.3);
+}
+
+.spell-filters-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--bg-secondary);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 0.75rem;
+}
+
+.spell-filters-bar .search-box {
+  flex: 1;
+  min-width: 220px;
+}
+
+.spell-filters-bar select.spell-select {
+  width: 150px;
+}
+
+.checkbox-styled-group {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: var(--color-accent-green);
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+
+.checkbox-label:hover {
+  color: var(--text-title);
+}
+
+.spells-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 0.85rem;
+}
+
+.spell-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  backdrop-filter: var(--glass-blur);
+  transition: var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.spell-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  transition: var(--transition-smooth);
+}
+
+.spell-card:hover {
+  transform: translateY(-2px);
+  background-color: var(--bg-card-hover);
+  border-color: var(--color-accent-green);
+  box-shadow: var(--shadow-glow);
+}
+
+.spell-card:hover::before {
+  background: var(--color-accent-green);
+}
+
+.spell-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  padding-bottom: 0.4rem;
+}
+
+.spell-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.spell-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-gold);
+  line-height: 1.2;
+}
+
+.spell-school-level {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-header);
+}
+
+.spell-level-badge {
+  background: rgba(46, 204, 113, 0.1);
+  color: var(--color-accent-green);
+  border: 1px solid rgba(46, 204, 113, 0.2);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-family: var(--font-header);
+  font-weight: bold;
+}
+
+.spell-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem;
+  background: rgba(0,0,0,0.25);
+  padding: 0.4rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.spell-meta-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.spell-meta-item .label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: var(--font-header);
+  text-transform: uppercase;
+}
+
+.spell-meta-item .val {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spell-desc {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--text-body);
+  max-height: 120px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+  white-space: pre-line;
+}
+
+/* Scrollbar styles for the description in spell cards */
+.spell-desc::-webkit-scrollbar {
+  width: 4px;
+}
+.spell-desc::-webkit-scrollbar-track {
+  background: transparent;
+}
+.spell-desc::-webkit-scrollbar-thumb {
+  background: rgba(46, 204, 113, 0.15);
+  border-radius: 2px;
+}
+.spell-desc::-webkit-scrollbar-thumb:hover {
+  background: rgba(46, 204, 113, 0.3);
+}
+
+.spell-components {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 0.4rem;
+}

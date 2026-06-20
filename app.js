@@ -27,6 +27,13 @@ let state = {
     tempHpMax: 0,
     hpCurrent: 0, // Used for 2014 rules (beast HP tracker)
     hpMax: 0
+  },
+  activePanel: 'grimoire', // 'grimoire' or 'spells'
+  spellFilters: {
+    search: '',
+    level: 'all',
+    school: 'all',
+    limitToMyLevel: false
   }
 };
 
@@ -41,6 +48,22 @@ const elements = {
   charWis: document.getElementById('char-wis'),
   charHpCurrent: document.getElementById('char-hp-current'),
   charHpMax: document.getElementById('char-hp-max'),
+  
+  // Main Panel Toggles
+  mainTabWildshapes: document.getElementById('main-tab-wildshapes'),
+  mainTabSpells: document.getElementById('main-tab-spells'),
+  panelWildshapes: document.getElementById('panel-wildshapes'),
+  panelSpells: document.getElementById('panel-spells'),
+  sidebarBeastFilters: document.getElementById('sidebar-beast-filters'),
+  sidebarCharSummary: document.getElementById('sidebar-char-summary'),
+
+  // Spell Elements
+  spellFilterSearch: document.getElementById('spell-filter-search'),
+  spellFilterLevel: document.getElementById('spell-filter-level'),
+  spellFilterSchool: document.getElementById('spell-filter-school'),
+  spellFilterClassLevel: document.getElementById('spell-filter-class-level'),
+  spellsCount: document.getElementById('spells-count'),
+  spellsListContainer: document.getElementById('spells-list-container'),
   
   // Constraints display
   limitCr: document.getElementById('limit-cr'),
@@ -158,6 +181,30 @@ function init() {
   updateFormConstraintsDisplay();
   renderBeasts();
   renderHUD();
+  switchPanel(state.activePanel);
+}
+
+// Switch between Wild Shapes and Spell Lookup panels
+function switchPanel(panelName) {
+  state.activePanel = panelName;
+  saveState();
+
+  if (panelName === 'grimoire') {
+    elements.mainTabWildshapes.classList.add('active');
+    elements.mainTabSpells.classList.remove('active');
+    elements.panelWildshapes.style.display = 'block';
+    elements.panelSpells.style.display = 'none';
+    elements.sidebarBeastFilters.style.display = 'block';
+    elements.sidebarCharSummary.style.display = 'block';
+  } else {
+    elements.mainTabSpells.classList.add('active');
+    elements.mainTabWildshapes.classList.remove('active');
+    elements.panelSpells.style.display = 'block';
+    elements.panelWildshapes.style.display = 'none';
+    elements.sidebarBeastFilters.style.display = 'none';
+    elements.sidebarCharSummary.style.display = 'none';
+    renderSpells();
+  }
 }
 
 // Load from LocalStorage
@@ -213,6 +260,24 @@ function loadLocalStorage() {
       console.error("Error loading active Wild Shape", e);
     }
   }
+
+  const savedPanel = localStorage.getItem('ws_active_panel');
+  if (savedPanel) {
+    state.activePanel = savedPanel;
+  }
+  const savedSpellFilters = localStorage.getItem('ws_spell_filters');
+  if (savedSpellFilters) {
+    try {
+      state.spellFilters = JSON.parse(savedSpellFilters);
+      // Sync spell inputs
+      if (elements.spellFilterSearch) elements.spellFilterSearch.value = state.spellFilters.search;
+      if (elements.spellFilterLevel) elements.spellFilterLevel.value = state.spellFilters.level;
+      if (elements.spellFilterSchool) elements.spellFilterSchool.value = state.spellFilters.school;
+      if (elements.spellFilterClassLevel) elements.spellFilterClassLevel.checked = state.spellFilters.limitToMyLevel;
+    } catch (e) {
+      console.error("Error loading spell filters", e);
+    }
+  }
 }
 
 // Save to LocalStorage
@@ -221,6 +286,8 @@ function saveState() {
   localStorage.setItem('ws_favorites', JSON.stringify(state.favorites));
   localStorage.setItem('ws_custom_beasts', JSON.stringify(state.customBeasts));
   localStorage.setItem('ws_active_shape', JSON.stringify(state.activeWildShape));
+  localStorage.setItem('ws_active_panel', state.activePanel);
+  localStorage.setItem('ws_spell_filters', JSON.stringify(state.spellFilters));
 }
 
 // Setup Event Listeners
@@ -273,6 +340,9 @@ function setupEventListeners() {
     saveState();
     updateFormConstraintsDisplay();
     renderBeasts();
+    if (state.spellFilters.limitToMyLevel) {
+      renderSpells();
+    }
   });
 
   elements.charWis.addEventListener('input', (e) => {
@@ -409,6 +479,35 @@ function setupEventListeners() {
 
   // Save Custom Beast
   elements.btnSaveCustomBeast.addEventListener('click', saveCustomBeast);
+
+  // Main Panel Toggles
+  elements.mainTabWildshapes.addEventListener('click', () => switchPanel('grimoire'));
+  elements.mainTabSpells.addEventListener('click', () => switchPanel('spells'));
+
+  // Spell Filters
+  elements.spellFilterSearch.addEventListener('input', (e) => {
+    state.spellFilters.search = e.target.value.toLowerCase();
+    saveState();
+    renderSpells();
+  });
+
+  elements.spellFilterLevel.addEventListener('change', (e) => {
+    state.spellFilters.level = e.target.value;
+    saveState();
+    renderSpells();
+  });
+
+  elements.spellFilterSchool.addEventListener('change', (e) => {
+    state.spellFilters.school = e.target.value;
+    saveState();
+    renderSpells();
+  });
+
+  elements.spellFilterClassLevel.addEventListener('change', (e) => {
+    state.spellFilters.limitToMyLevel = e.target.checked;
+    saveState();
+    renderSpells();
+  });
 }
 
 function toggleWisGroup() {
@@ -1416,6 +1515,122 @@ function deleteCustomBeast(id) {
     closeDrawer();
     showToast("Beast Deleted", "Custom form removed from Grimoire", "system");
   }
+}
+
+// Render Spells list based on search and level/school filters
+function renderSpells() {
+  if (!elements.spellsListContainer) return;
+
+  // 1. Filter spells
+  const filteredSpells = DEFAULT_SPELLS.filter(spell => {
+    // Search Filter
+    if (state.spellFilters.search) {
+      const q = state.spellFilters.search;
+      const nameMatch = spell.name.toLowerCase().includes(q);
+      const schoolMatch = spell.school.toLowerCase().includes(q);
+      const descMatch = spell.description.toLowerCase().includes(q);
+      if (!nameMatch && !schoolMatch && !descMatch) return false;
+    }
+
+    // Level Filter
+    if (state.spellFilters.level !== 'all') {
+      const filterLvl = parseInt(state.spellFilters.level);
+      if (spell.level !== filterLvl) return false;
+    }
+
+    // School Filter
+    if (state.spellFilters.school !== 'all') {
+      if (spell.school !== state.spellFilters.school) return false;
+    }
+
+    // limitToMyLevel filter (based on state.config.level)
+    if (state.spellFilters.limitToMyLevel) {
+      const maxLvl = getMaxSpellLevel(state.config.level);
+      if (spell.level > maxLvl) return false;
+    }
+
+    return true;
+  });
+
+  // Sort spells (by level first, then by name)
+  filteredSpells.sort((a, b) => {
+    if (a.level !== b.level) return a.level - b.level;
+    return a.name.localeCompare(b.name);
+  });
+
+  // 2. Render spell cards
+  elements.spellsListContainer.innerHTML = '';
+  
+  if (filteredSpells.length === 0) {
+    elements.spellsListContainer.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-muted);">
+        <p>No spells found matching the active filters.</p>
+      </div>
+    `;
+    elements.spellsCount.textContent = 'Showing 0 spells';
+    return;
+  }
+
+  elements.spellsCount.textContent = `Showing ${filteredSpells.length} spell${filteredSpells.length === 1 ? '' : 's'}`;
+
+  filteredSpells.forEach(spell => {
+    const card = document.createElement('div');
+    card.className = 'spell-card';
+
+    // Format spell level display
+    const lvlText = spell.level === 0 ? 'Cantrip' : `${spell.level}${getOrdinalSuffix(spell.level)} Level`;
+    const lvlBadge = spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`;
+
+    card.innerHTML = `
+      <div class="spell-header">
+        <div class="spell-title-group">
+          <h3 class="spell-name">${spell.name}</h3>
+          <span class="spell-school-level">${lvlText} • ${spell.school}</span>
+        </div>
+        <span class="spell-level-badge">${lvlBadge}</span>
+      </div>
+      <div class="spell-meta-grid">
+        <div class="spell-meta-item">
+          <span class="label">Casting Time</span>
+          <span class="val" title="${spell.time}">${spell.time}</span>
+        </div>
+        <div class="spell-meta-item">
+          <span class="label">Range</span>
+          <span class="val" title="${spell.range}">${spell.range}</span>
+        </div>
+        <div class="spell-meta-item">
+          <span class="label">Duration</span>
+          <span class="val" title="${spell.duration}">${spell.duration}</span>
+        </div>
+        <div class="spell-meta-item">
+          <span class="label">Components</span>
+          <span class="val" title="${spell.components}">${spell.components}</span>
+        </div>
+      </div>
+      <div class="spell-desc">${spell.description}</div>
+    `;
+
+    elements.spellsListContainer.appendChild(card);
+  });
+}
+
+// Helpers for spell rendering
+function getOrdinalSuffix(number) {
+  const s = ["th", "st", "nd", "rd"],
+        v = number % 100;
+  return s[(v - 20) % 10] || s[v] || s[0];
+}
+
+function getMaxSpellLevel(druidLevel) {
+  if (druidLevel >= 17) return 9;
+  if (druidLevel >= 15) return 8;
+  if (druidLevel >= 13) return 7;
+  if (druidLevel >= 11) return 6;
+  if (druidLevel >= 9) return 5;
+  if (druidLevel >= 7) return 4;
+  if (druidLevel >= 5) return 3;
+  if (druidLevel >= 3) return 2;
+  return 1;
 }
 
 // Start execution
