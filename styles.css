@@ -82,7 +82,7 @@ button, input, select, textarea {
 /* App Container Layout */
 .app-container {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
@@ -90,10 +90,10 @@ button, input, select, textarea {
 .sidebar {
   background-color: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
-  padding: 2rem 1.5rem;
+  padding: 1.25rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.25rem;
   overflow-y: auto;
   box-shadow: 5px 0 25px rgba(0,0,0,0.5);
   z-index: 10;
@@ -257,10 +257,10 @@ select.input-styled {
 
 /* MAIN CONTENT AREA */
 .main-content {
-  padding: 2rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   overflow-y: auto;
   height: 100vh;
 }
@@ -459,18 +459,18 @@ select.input-styled {
 /* BEAST GRID VIEW */
 .beast-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.85rem;
 }
 
 .beast-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 1.25rem;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.5rem;
   backdrop-filter: var(--glass-blur);
   transition: var(--transition-smooth);
   position: relative;
@@ -527,13 +527,13 @@ select.input-styled {
 }
 
 .card-title-group h3 {
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 700;
   line-height: 1.2;
 }
 
 .card-title-group .sub {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   font-family: var(--font-header);
 }
@@ -543,9 +543,9 @@ select.input-styled {
   border: none;
   cursor: pointer;
   color: var(--text-muted);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   transition: var(--transition-smooth);
-  padding: 0.2rem;
+  padding: 0.15rem;
   z-index: 2;
 }
 
@@ -563,9 +563,9 @@ select.input-styled {
   background: rgba(231, 76, 60, 0.15);
   color: #ff6b6b;
   border: 1px solid rgba(231, 76, 60, 0.3);
-  padding: 0.15rem 0.5rem;
+  padding: 0.1rem 0.4rem;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-family: var(--font-header);
   font-weight: bold;
 }
@@ -573,9 +573,9 @@ select.input-styled {
 .card-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
+  gap: 0.4rem;
   background: rgba(0,0,0,0.25);
-  padding: 0.6rem;
+  padding: 0.4rem;
   border-radius: 6px;
   text-align: center;
   border: 1px solid rgba(255,255,255,0.03);
@@ -587,14 +587,14 @@ select.input-styled {
 }
 
 .stat-item .label {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
   font-family: var(--font-header);
   text-transform: uppercase;
 }
 
 .stat-item .val {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-title);
 }
